@@ -22,6 +22,44 @@ def get_cost_per_student():
 
     return df
 
+def add_zero_to_county_num(df, id, cost):
+
+    raw_dict = df.to_dict('index')
+
+    conum_array = []
+    per_student_cost_array = []
+
+    for key in raw_dict:
+        conum = raw_dict[key][id]
+        per_student_cost = raw_dict[key][cost]
+        if len(conum) == 4:
+            conum = '0' + conum
+        
+        conum_array.append(conum)
+        per_student_cost_array.append(per_student_cost)
+
+    final_dict = {id:conum_array, cost:per_student_cost_array}
+
+    df_final = pd.DataFrame.from_dict(final_dict)
+
+    return df_final
+
+def get_cost_per_student_county():
+
+    df_all = pd.read_csv('edspending_county.CSV')
+
+    df = df_all[['CONUM','PPCSTOT']].copy()
+
+    df.rename(columns={"CONUM": "county_num", "PPCSTOT": "per_student_cost"}, inplace = True)
+
+    df = df.astype({"county_num": str})
+
+    df_final = add_zero_to_county_num(df, 'county_num', 'per_student_cost')
+
+    print(df_final.head())
+
+get_cost_per_student_county()
+
 def merge_by_state():
 
     df_cost_index = get_cost_index()
@@ -62,5 +100,5 @@ def regression(df, x, y):
 
     print(pearsonr(x_list,y_list))
 
-df = merge_by_state()
-plot_cost_by_state(df)
+#df = merge_by_state()
+#plot_cost_by_state(df)
