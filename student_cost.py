@@ -73,11 +73,19 @@ def merge_by_county():
     df_poverty_by_county = get_poverty_by_county()
     df_merge = pd.merge(df_cost_per_county, df_poverty_by_county, on='county_num')
 
+    print(df_merge.dtypes)
+
     return df_merge
 
 def plot_cost_by_county(df):
 
     ax = df.plot.scatter(x='poverty_percent', y='per_student_cost', title='Poverty Rate and Cost per Pupil by County')
+
+    #ax.yaxis.set_major_locator(plt.NullLocator())
+    #ax.xaxis.set_major_formatter(plt.NullFormatter())
+
+    myLocator = mtick.MultipleLocator(20)
+    ax.xaxis.set_major_locator(myLocator)
 
     plt.xlabel('County Poverty Rate')
     plt.ylabel('Cost per Student')
@@ -89,16 +97,7 @@ def plot_cost_by_county(df):
     #regression(df, 'costIndex', 'amountPerPupil')
 
     # set ticks here
-
-    range_array = []
-
-    i = 0
-
-    while i<100:
-        range_array.append(i)
-        i = i + 1
-
-    ax.set_xticks(range_array)    #set interval here
+ #set interval here
 
     plt.show()
 
@@ -147,5 +146,5 @@ def regression(df, x, y):
 
 df = merge_by_county()
 
-print(df)
-#plot_cost_by_county(df)
+#print(df)
+plot_cost_by_county(df)
