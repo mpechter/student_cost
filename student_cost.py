@@ -66,7 +66,34 @@ def get_poverty_by_county():
 
     df.rename(columns={'County Code':'county_num','Poverty Percent, All Ages':'poverty_percent','Median Household Income':'median_income'}, inplace = True)
 
-    return df
+    county_array = []
+    poverty_array = []
+    median_array = []
+
+
+    df_dict = df.to_dict('index')
+
+    for key in df_dict:
+        county_num = df_dict[key]['county_num']
+        poverty = df_dict[key]['poverty_percent']
+        median = df_dict[key]['median_income']
+
+        median = median.replace(',','')
+        if len(poverty)<=1:
+            continue
+
+        poverty_float = float(poverty)
+        median_float = float(median)
+
+        county_array.append(county_num)
+        poverty_array.append(poverty_float)
+        median_array.append(median_float)
+
+    final_dict = {'county_num':county_array, 'poverty_percent':poverty_array, 'median_income':median_array}
+
+    df_final = pd.DataFrame.from_dict(final_dict)
+
+    return df_final
 
 def merge_by_county():
     df_cost_per_county = get_cost_per_student_county()
@@ -81,23 +108,17 @@ def plot_cost_by_county(df):
 
     ax = df.plot.scatter(x='poverty_percent', y='per_student_cost', title='Poverty Rate and Cost per Pupil by County')
 
-    #ax.yaxis.set_major_locator(plt.NullLocator())
-    #ax.xaxis.set_major_formatter(plt.NullFormatter())
-
-    myLocator = mtick.MultipleLocator(20)
-    ax.xaxis.set_major_locator(myLocator)
+    #myLocator = mtick.MultipleLocator(20)
+    #ax.xaxis.set_major_locator(myLocator)
 
     plt.xlabel('County Poverty Rate')
     plt.ylabel('Cost per Student')
 
-    #fmt = '%.0f%%' # Format you want the ticks, e.g. '40%'
-    #yticks = mtick.FormatStrFormatter(fmt)
-    #ax.yaxis.set_major_formatter(yticks)
+    fmt = '%.0f%%' # Format you want the ticks, e.g. '40%'
+    xticks = mtick.FormatStrFormatter(fmt)
+    ax.xaxis.set_major_formatter(xticks)
 
     #regression(df, 'costIndex', 'amountPerPupil')
-
-    # set ticks here
- #set interval here
 
     plt.show()
 
@@ -145,6 +166,4 @@ def regression(df, x, y):
 #plot_cost_by_state(df)
 
 df = merge_by_county()
-
-#print(df)
 plot_cost_by_county(df)
