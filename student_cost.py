@@ -35,23 +35,26 @@ def get_cost_per_student_county():
 
     df_all = pd.read_csv('edspending_county.CSV')
 
-    df = df_all[['CONUM','PPCSTOT']].copy()
+    df = df_all[['CONUM','PPCSTOT', "ENROLL"]].copy()
 
-    df.rename(columns={"CONUM": "county_num", "PPCSTOT": "per_student_cost"}, inplace = True)
+    df.rename(columns={"CONUM": "county_num", "PPCSTOT": "per_student_cost","ENROLL":'enrollment'}, inplace = True)
 
     df_dict = df.to_dict('index')
 
     county_array = []
     cost_array = []
+    enrollment_array = []
 
     for key in df_dict:
         county_num = df_dict[key]['county_num']
         per_student_cost = df_dict[key]['per_student_cost']
-        if per_student_cost < 50000 and per_student_cost != 0:
+        enrollment = df_dict[key]['enrollment']
+        if per_student_cost < 50000 and per_student_cost != 0 and enrollment != 0:
             county_array.append(county_num)
             cost_array.append(per_student_cost)
+            enrollment_array.append(enrollment)
 
-    final_dict = {'county_num':county_array, 'per_student_cost':cost_array}
+    final_dict = {'county_num':county_array, 'per_student_cost':cost_array,'enrollment':enrollment_array}
 
     df_final = pd.DataFrame.from_dict(final_dict)
 
@@ -99,8 +102,6 @@ def merge_by_county():
     df_poverty_by_county = get_poverty_by_county()
     df_merge = pd.merge(df_cost_per_county, df_poverty_by_county, on='county_num')
 
-    print(df_merge.dtypes)
-
     return df_merge
 
 def plot_cost_by_county(df):
@@ -114,9 +115,28 @@ def plot_cost_by_county(df):
     xticks = mtick.FormatStrFormatter(fmt)
     ax.xaxis.set_major_formatter(xticks)
 
-    #regression(df, 'poverty_percent', 'per_student_cost')
+    ax.yaxis.set_major_formatter(currency)
 
     plt.show()
+
+def plot_cost_by_enrollment(df):
+
+    ax = df.plot.scatter(x='enrollment', y='per_student_cost', title='Enrollment and Cost per Pupil by County')
+
+    plt.xlabel('Enrollment')
+    plt.ylabel('Cost per Student')
+
+    ax.yaxis.set_major_formatter(currency)
+
+    plt.show()
+
+def currency(x, pos):
+    """The two args are the value and tick position"""
+    if x >= 1e6:
+        s = '${:1.1f}M'.format(x*1e-6)
+    else:
+        s = '${:1.0f}K'.format(x*1e-3)
+    return s
 
 def plot_cost_by_median(df):
 
@@ -125,11 +145,8 @@ def plot_cost_by_median(df):
     plt.xlabel('Median Income')
     plt.ylabel('Cost per Student')
 
-    #fmt = '%.0f%%' # Format you want the ticks, e.g. '40%'
-    #xticks = mtick.FormatStrFormatter(fmt)
-   # ax.xaxis.set_major_formatter(xticks)
-
-    #regression(df, 'median_income', 'per_student_cost')
+    ax.xaxis.set_major_formatter(currency)
+    ax.yaxis.set_major_formatter(currency)
 
     plt.show()
 
@@ -140,9 +157,7 @@ def plot_cost_by_state(df):
     plt.xlabel('Cost of Living Index')
     plt.ylabel('Cost per Student')
 
-    #fmt = '%.0f%%' # Format you want the ticks, e.g. '40%'
-    #yticks = mtick.FormatStrFormatter(fmt)
-    #ax.yaxis.set_major_formatter(yticks)
+    ax.yaxis.set_major_formatter(currency)
 
     regression(df, 'costIndex', 'amountPerPupil')
 
@@ -171,3 +186,4 @@ plot_cost_by_state(df)
 df = merge_by_county()
 plot_cost_by_county(df)
 plot_cost_by_median(df)
+plot_cost_by_enrollment(df)
