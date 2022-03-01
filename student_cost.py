@@ -1,3 +1,4 @@
+from itertools import count
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,27 +23,13 @@ def get_cost_per_student():
 
     return df
 
-def add_zero_to_county_num(df, id, measure):
+def merge_by_state():
 
-    raw_dict = df.to_dict('index')
+    df_cost_index = get_cost_index()
+    df_cost_per_student = get_cost_per_student()
+    df_merge = pd.merge(df_cost_index, df_cost_per_student, on='State')
 
-    conum_array = []
-    measure_array = []
-
-    for key in raw_dict:
-        conum = raw_dict[key][id]
-        measure_instance = raw_dict[key][measure]
-        if len(conum) == 4:
-            conum = '0' + conum
-        
-        conum_array.append(conum)
-        measure_array.append(measure_instance)
-
-    final_dict = {id:conum_array, measure: measure_array}
-
-    df_final = pd.DataFrame.from_dict(final_dict)
-
-    return df_final
+    return df_merge
 
 def get_cost_per_student_county():
 
@@ -52,11 +39,23 @@ def get_cost_per_student_county():
 
     df.rename(columns={"CONUM": "county_num", "PPCSTOT": "per_student_cost"}, inplace = True)
 
-    #df = df.astype({"county_num": str})
+    df_dict = df.to_dict('index')
 
-    #df_final = add_zero_to_county_num(df, 'county_num', 'per_student_cost')
+    county_array = []
+    cost_array = []
 
-    return df
+    for key in df_dict:
+        county_num = df_dict[key]['county_num']
+        per_student_cost = df_dict[key]['per_student_cost']
+        if per_student_cost < 50000 and per_student_cost != 0:
+            county_array.append(county_num)
+            cost_array.append(per_student_cost)
+
+    final_dict = {'county_num':county_array, 'per_student_cost':cost_array}
+
+    df_final = pd.DataFrame.from_dict(final_dict)
+
+    return df_final
 
 def get_poverty_by_county():
     
@@ -108,9 +107,6 @@ def plot_cost_by_county(df):
 
     ax = df.plot.scatter(x='poverty_percent', y='per_student_cost', title='Poverty Rate and Cost per Pupil by County')
 
-    #myLocator = mtick.MultipleLocator(20)
-    #ax.xaxis.set_major_locator(myLocator)
-
     plt.xlabel('County Poverty Rate')
     plt.ylabel('Cost per Student')
 
@@ -118,17 +114,24 @@ def plot_cost_by_county(df):
     xticks = mtick.FormatStrFormatter(fmt)
     ax.xaxis.set_major_formatter(xticks)
 
-    #regression(df, 'costIndex', 'amountPerPupil')
+    #regression(df, 'poverty_percent', 'per_student_cost')
 
     plt.show()
 
-def merge_by_state():
+def plot_cost_by_median(df):
 
-    df_cost_index = get_cost_index()
-    df_cost_per_student = get_cost_per_student()
-    df_merge = pd.merge(df_cost_index, df_cost_per_student, on='State')
+    ax = df.plot.scatter(x='median_income', y='per_student_cost', title='Median Income and Cost per Pupil by County')
 
-    return df_merge
+    plt.xlabel('Median Income')
+    plt.ylabel('Cost per Student')
+
+    #fmt = '%.0f%%' # Format you want the ticks, e.g. '40%'
+    #xticks = mtick.FormatStrFormatter(fmt)
+   # ax.xaxis.set_major_formatter(xticks)
+
+    #regression(df, 'median_income', 'per_student_cost')
+
+    plt.show()
 
 def plot_cost_by_state(df):
 
@@ -162,8 +165,9 @@ def regression(df, x, y):
 
     print(pearsonr(x_list,y_list))
 
-#df = merge_by_state()
-#plot_cost_by_state(df)
+df = merge_by_state()
+plot_cost_by_state(df)
 
 df = merge_by_county()
 plot_cost_by_county(df)
+plot_cost_by_median(df)
