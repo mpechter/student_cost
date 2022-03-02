@@ -9,6 +9,31 @@ import math
 
 plt.style.use('ggplot')
 
+def regression(df, x, y):
+
+    X = df.iloc[:, 1].values.reshape(-1, 1)  # values converts it into a numpy array
+    Y = df.iloc[:, 2].values.reshape(-1, 1)  # -1 means you aren't sure the number of rows, but should have 1 column
+    linear_regressor = LinearRegression()  # create object for the class
+    linear_regressor.fit(X, Y)  # perform linear regression
+    Y_pred = linear_regressor.predict(X)  # make predictions
+
+    plt.plot(X, Y_pred, color='red')
+
+    plt.show()
+
+    x_list = df[x].values.tolist()
+    y_list = df[y].values.tolist()
+
+    print(pearsonr(x_list,y_list))
+
+def currency(x, pos):
+    """The two args are the value and tick position"""
+    if x >= 1e6:
+        s = '${:1.1f}M'.format(x*1e-6)
+    else:
+        s = '${:1.0f}K'.format(x*1e-3)
+    return s
+
 def get_cost_index():
 
     df_all = pd.read_csv('cost_of_living.CSV')
@@ -16,6 +41,36 @@ def get_cost_index():
     df = df_all[['State', 'costIndex']].copy()
 
     return df
+
+def get_salaries():
+
+    df_all = pd.read_csv('teacher_salaries.CSV')
+
+    df = df_all[['State', 'salary']].copy()
+
+    #print(df.dtypes)
+
+    df_dict = df.to_dict('index')
+
+    state_array = []
+    salary_array = []
+
+    for key in df_dict:
+        state = df_dict[key]['State']
+        salary = df_dict[key]['salary']
+
+        salary = salary.replace(',','')
+
+        salary_float = float(salary)
+
+        state_array.append(state)
+        salary_array.append(salary_float)
+
+    final_dict = {'State':state_array, 'salary':salary_array}
+
+    df_final = pd.DataFrame.from_dict(final_dict)
+
+    return df_final
 
 def get_cost_per_student():
 
@@ -28,6 +83,15 @@ def merge_by_state():
     df_cost_index = get_cost_index()
     df_cost_per_student = get_cost_per_student()
     df_merge = pd.merge(df_cost_index, df_cost_per_student, on='State')
+
+    return df_merge
+
+def merge_by_state_salary():
+
+    df_cost_per_student = get_cost_per_student()
+    df_salary = get_salaries()
+    print(df_salary.dtypes)
+    df_merge = pd.merge(df_cost_per_student, df_salary, on='State')
 
     return df_merge
 
@@ -71,7 +135,6 @@ def get_poverty_by_county():
     county_array = []
     poverty_array = []
     median_array = []
-
 
     df_dict = df.to_dict('index')
 
@@ -130,14 +193,6 @@ def plot_cost_by_enrollment(df):
 
     plt.show()
 
-def currency(x, pos):
-    """The two args are the value and tick position"""
-    if x >= 1e6:
-        s = '${:1.1f}M'.format(x*1e-6)
-    else:
-        s = '${:1.0f}K'.format(x*1e-3)
-    return s
-
 def plot_cost_by_median(df):
 
     ax = df.plot.scatter(x='median_income', y='per_student_cost', title='Median Income and Cost per Pupil by County')
@@ -163,27 +218,27 @@ def plot_cost_by_state(df):
 
     plt.show()
 
-def regression(df, x, y):
+def plot_cost_by_salary(df):
 
-    X = df.iloc[:, 1].values.reshape(-1, 1)  # values converts it into a numpy array
-    Y = df.iloc[:, 2].values.reshape(-1, 1)  # -1 means you aren't sure the number of rows, but should have 1 column
-    linear_regressor = LinearRegression()  # create object for the class
-    linear_regressor.fit(X, Y)  # perform linear regression
-    Y_pred = linear_regressor.predict(X)  # make predictions
+    ax = df.plot.scatter(x='salary', y='amountPerPupil', title='Teacher Salaries and Cost per Pupil')
 
-    plt.plot(X, Y_pred, color='red')
+    plt.xlabel('Teacher Salaries')
+    plt.ylabel('Cost per Student')
+
+    ax.xaxis.set_major_formatter(currency)
+    ax.yaxis.set_major_formatter(currency)
+
+    #regression(df, 'salary', 'amountPerPupil')
 
     plt.show()
 
-    x_list = df[x].values.tolist()
-    y_list = df[y].values.tolist()
+#df = merge_by_state()
+#plot_cost_by_state(df)
 
-    print(pearsonr(x_list,y_list))
+df = merge_by_state_salary()
+plot_cost_by_salary(df)
 
-df = merge_by_state()
-plot_cost_by_state(df)
-
-df = merge_by_county()
-plot_cost_by_county(df)
-plot_cost_by_median(df)
-plot_cost_by_enrollment(df)
+#df = merge_by_county()
+#plot_cost_by_county(df)
+#plot_cost_by_median(df)
+#plot_cost_by_enrollment(df)
