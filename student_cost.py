@@ -11,8 +11,8 @@ plt.style.use('ggplot')
 
 def regression(df, x, y):
 
-    X = df.iloc[:, 1].values.reshape(-1, 1)  # values converts it into a numpy array
-    Y = df.iloc[:, 2].values.reshape(-1, 1)  # -1 means you aren't sure the number of rows, but should have 1 column
+    X = df.loc[:, x].values.reshape(-1, 1)  # values converts it into a numpy array
+    Y = df.loc[:, y].values.reshape(-1, 1)  # -1 means you aren't sure the number of rows, but should have 1 column
     linear_regressor = LinearRegression()  # create object for the class
     linear_regressor.fit(X, Y)  # perform linear regression
     Y_pred = linear_regressor.predict(X)  # make predictions
@@ -47,8 +47,6 @@ def get_salaries():
     df_all = pd.read_csv('teacher_salaries.CSV')
 
     df = df_all[['State', 'salary']].copy()
-
-    #print(df.dtypes)
 
     df_dict = df.to_dict('index')
 
@@ -90,7 +88,6 @@ def merge_by_state_salary():
 
     df_cost_per_student = get_cost_per_student()
     df_salary = get_salaries()
-    print(df_salary.dtypes)
     df_merge = pd.merge(df_cost_per_student, df_salary, on='State')
 
     return df_merge
@@ -228,17 +225,17 @@ def plot_cost_by_salary(df):
     ax.xaxis.set_major_formatter(currency)
     ax.yaxis.set_major_formatter(currency)
 
-    #regression(df, 'salary', 'amountPerPupil')
+    regression(df, 'salary', 'amountPerPupil')
 
     plt.show()
 
-#df = merge_by_state()
-#plot_cost_by_state(df)
+df = merge_by_state()
+plot_cost_by_state(df)
 
 df = merge_by_state_salary()
 plot_cost_by_salary(df)
 
-#df = merge_by_county()
-#plot_cost_by_county(df)
-#plot_cost_by_median(df)
-#plot_cost_by_enrollment(df)
+df = merge_by_county()
+plot_cost_by_county(df)
+plot_cost_by_median(df)
+plot_cost_by_enrollment(df)
