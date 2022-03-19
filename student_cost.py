@@ -238,4 +238,5 @@ plot_cost_by_salary(df)
 df = merge_by_county()
 plot_cost_by_county(df)
 plot_cost_by_median(df)
+
 plot_cost_by_enrollment(df)
